@@ -70,12 +70,13 @@ if not carteira.empty:
 
     precos = dados["Close"].iloc[-1]
 
-    carteira["preco_atual"] = carteira["ticker"].map(precos)
-
     carteira["valor_investido"] = carteira["quantidade"] * carteira["preco_medio"]
+
     carteira["valor_atual"] = carteira["quantidade"] * carteira["preco_atual"]
 
     carteira["lucro"] = carteira["valor_atual"] - carteira["valor_investido"]
+
+    total_investido = carteira["valor_investido"].sum()
 
     carteira["% na carteira"] = (
     carteira["valor_investido"] / total_investido
