@@ -91,10 +91,16 @@ if not carteira.empty:
 # -----------------------------
 
     carteira["valor_investido"] = carteira["quantidade"] * carteira["preco_medio"]
-
     carteira["valor_atual"] = carteira["quantidade"] * carteira["preco_atual"]
-
     carteira["lucro"] = carteira["valor_atual"] - carteira["valor_investido"]
+
+# arredondar valores monetários
+
+    carteira["preco_medio"] = carteira["preco_medio"].round(1)
+    carteira["preco_atual"] = carteira["preco_atual"].round(1)
+    carteira["valor_investido"] = carteira["valor_investido"].round(1)
+    carteira["valor_atual"] = carteira["valor_atual"].round(1)
+    carteira["lucro"] = carteira["lucro"].round(1)
 
 # rentabilidade %
 
@@ -125,15 +131,12 @@ if not carteira.empty:
 # -----------------------------
 
     total_atual = carteira["valor_atual"].sum()
-
     lucro_total = total_atual - total_investido
 
     col1,col2,col3 = st.columns(3)
 
     col1.metric("💰 Valor investido", f"R$ {total_investido:,.1f}")
-
     col2.metric("📈 Valor atual", f"R$ {total_atual:,.1f}")
-
     col3.metric("📊 Lucro / Prejuízo", f"R$ {lucro_total:,.1f}")
 
 # -----------------------------
