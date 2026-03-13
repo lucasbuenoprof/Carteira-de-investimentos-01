@@ -171,7 +171,7 @@ else:
 # atualização automática
 # -------------------------
 
-st.caption("Atualiza automaticamente a cada 10 segundos")
+st.caption("Atualiza automaticamente a cada 15 segundos")
 
-time.sleep(60)
+time.sleep(15)
 st.experimental_rerun()
