@@ -130,11 +130,11 @@ if not carteira.empty:
 
     col1,col2,col3 = st.columns(3)
 
-    col1.metric("💰 Valor investido", f"R$ {total_investido:,.2f}")
+    col1.metric("💰 Valor investido", f"R$ {total_investido:,.1f}")
 
-    col2.metric("📈 Valor atual", f"R$ {total_atual:,.2f}")
+    col2.metric("📈 Valor atual", f"R$ {total_atual:,.1f}")
 
-    col3.metric("📊 Lucro / Prejuízo", f"R$ {lucro_total:,.2f}")
+    col3.metric("📊 Lucro / Prejuízo", f"R$ {lucro_total:,.1f}")
 
 # -----------------------------
 # tabela
@@ -142,12 +142,9 @@ if not carteira.empty:
 
     st.subheader("Carteira")
 
-# ajustar índice para começar em 1
     tabela = carteira.copy()
 
     tabela.index = range(1, len(tabela) + 1)
-
-# formatar para 01, 02, 03...
     tabela.index = tabela.index.map(lambda x: f"{x:02}")
 
     st.dataframe(tabela, use_container_width=True)
@@ -174,10 +171,10 @@ if not carteira.empty:
         st.rerun()
 
 # -----------------------------
-# gráfico do ativo
+# gráfico
 # -----------------------------
 
-    st.subheader("Gráfico")
+    st.subheader("Gráfico do ativo")
 
     ativo = st.selectbox("Escolha um ativo", tickers)
 
