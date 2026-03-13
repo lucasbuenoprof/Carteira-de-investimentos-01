@@ -79,8 +79,8 @@ if not carteira.empty:
     total_investido = carteira["valor_investido"].sum()
 
     carteira["% na carteira"] = (
-    carteira["valor_investido"] / total_investido
-) * 100
+    (carteira["valor_investido"] / total_investido) * 100
+).round(1)
 
 # -------------------------
 # métricas da carteira
