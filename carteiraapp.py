@@ -76,11 +76,18 @@ if not carteira.empty:
 
     carteira["lucro"] = carteira["valor_atual"] - carteira["valor_investido"]
 
+    carteira["rentabilidade_%"] = (
+    (carteira["lucro"] / carteira["valor_investido"]) * 100
+).round(1)
+
+    carteira["rentabilidade_%"] = carteira["rentabilidade_%"].astype(str) + " %"
+
     total_investido = carteira["valor_investido"].sum()
 
     carteira["% na carteira"] = (
     (carteira["valor_investido"] / total_investido) * 100
 ).round(1)
+    carteira["% na carteira"] = carteira["% na carteira"].astype(str) + " %"
 
 # -------------------------
 # métricas da carteira
