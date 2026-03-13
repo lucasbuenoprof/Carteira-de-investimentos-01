@@ -77,9 +77,9 @@ if not carteira.empty:
 
     carteira["lucro"] = carteira["valor_atual"] - carteira["valor_investido"]
 
-    carteira["rentabilidade_%"] = (
-        carteira["lucro"] / carteira["valor_investido"]
-    ) * 100
+    carteira["% na carteira"] = (
+    carteira["valor_investido"] / total_investido
+) * 100
 
 # -------------------------
 # métricas da carteira
