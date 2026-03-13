@@ -8,6 +8,13 @@ st.set_page_config(page_title="Carteira de Investimentos", layout="wide")
 st.title("📊 Dashboard de Investimentos")
 
 # -----------------------------
+# formatar moeda brasileira
+# -----------------------------
+
+def formatar_moeda(valor):
+    return f"R$ {valor:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+# -----------------------------
 # carregar carteira
 # -----------------------------
 
@@ -94,7 +101,7 @@ if not carteira.empty:
     carteira["valor_atual"] = carteira["quantidade"] * carteira["preco_atual"]
     carteira["lucro"] = carteira["valor_atual"] - carteira["valor_investido"]
 
-# arredondar valores monetários
+# arredondar valores
 
     carteira["preco_medio"] = carteira["preco_medio"].round(1)
     carteira["preco_atual"] = carteira["preco_atual"].round(1)
@@ -135,9 +142,9 @@ if not carteira.empty:
 
     col1,col2,col3 = st.columns(3)
 
-    col1.metric("💰 Valor investido", f"R$ {total_investido:,.1f}")
-    col2.metric("📈 Valor atual", f"R$ {total_atual:,.1f}")
-    col3.metric("📊 Lucro / Prejuízo", f"R$ {lucro_total:,.1f}")
+    col1.metric("💰 Valor investido", formatar_moeda(total_investido))
+    col2.metric("📈 Valor atual", formatar_moeda(total_atual))
+    col3.metric("📊 Lucro / Prejuízo", formatar_moeda(lucro_total))
 
 # -----------------------------
 # tabela
