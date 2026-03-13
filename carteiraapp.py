@@ -4,11 +4,11 @@ import yfinance as yf
 import time
 
 st.set_page_config(
-    page_title="Dashboard de Investimentos",
+    page_title="Minha Carteira",
     layout="wide"
 )
 
-st.title("📈 Minha Carteira de Investimentos")
+st.title("📈 Dashboard de Investimentos")
 
 # -------------------------
 # carregar carteira
@@ -36,15 +36,19 @@ quantidade = st.sidebar.number_input("Quantidade", min_value=1)
 preco = st.sidebar.number_input("Preço médio", min_value=0.0)
 
 if st.sidebar.button("Adicionar"):
-    novo = pd.DataFrame({
-        "ticker":[ticker],
-        "quantidade":[quantidade],
-        "preco_medio":[preco]
-    })
-    
-    carteira = pd.concat([carteira, novo], ignore_index=True)
-    salvar_carteira(carteira)
-    st.sidebar.success("Ativo adicionado!")
+
+    if ticker != "":
+
+        novo = pd.DataFrame({
+            "ticker":[ticker],
+            "quantidade":[quantidade],
+            "preco_medio":[preco]
+        })
+
+        carteira = pd.concat([carteira, novo], ignore_index=True)
+        salvar_carteira(carteira)
+
+        st.sidebar.success("Ativo adicionado!")
 
 # -------------------------
 # buscar preços
@@ -56,22 +60,26 @@ if not carteira.empty:
 
     dados = yf.download(
         tickers,
-        period="1d",
-        interval="1m",
+        period="5d",
         progress=False
     )
+
+    if dados.empty:
+        st.error("Não foi possível carregar os preços. Verifique os tickers.")
+        st.stop()
 
     precos = dados["Close"].iloc[-1]
 
     carteira["preco_atual"] = carteira["ticker"].map(precos)
 
     carteira["valor_investido"] = carteira["quantidade"] * carteira["preco_medio"]
-
     carteira["valor_atual"] = carteira["quantidade"] * carteira["preco_atual"]
 
     carteira["lucro"] = carteira["valor_atual"] - carteira["valor_investido"]
 
-    carteira["rentabilidade_%"] = (carteira["lucro"] / carteira["valor_investido"]) * 100
+    carteira["rentabilidade_%"] = (
+        carteira["lucro"] / carteira["valor_investido"]
+    ) * 100
 
 # -------------------------
 # métricas da carteira
@@ -83,9 +91,20 @@ if not carteira.empty:
 
     col1,col2,col3 = st.columns(3)
 
-    col1.metric("💰 Valor investido", f"R$ {total_investido:,.2f}")
-    col2.metric("📊 Valor atual", f"R$ {total_atual:,.2f}")
-    col3.metric("📈 Lucro / Prejuízo", f"R$ {lucro_total:,.2f}")
+    col1.metric(
+        "💰 Valor investido",
+        f"R$ {total_investido:,.2f}"
+    )
+
+    col2.metric(
+        "📊 Valor atual",
+        f"R$ {total_atual:,.2f}"
+    )
+
+    col3.metric(
+        "📈 Lucro / Prejuízo",
+        f"R$ {lucro_total:,.2f}"
+    )
 
 # -------------------------
 # tabela carteira
@@ -102,7 +121,7 @@ if not carteira.empty:
 # gráfico ativo
 # -------------------------
 
-    st.subheader("Gráfico")
+    st.subheader("Gráfico do ativo")
 
     ativo = st.selectbox(
         "Escolha um ativo",
@@ -111,10 +130,14 @@ if not carteira.empty:
 
     hist = yf.download(
         ativo,
-        period="6mo"
+        period="6mo",
+        progress=False
     )
 
-    st.line_chart(hist["Close"])
+    if not hist.empty:
+        st.line_chart(hist["Close"])
+    else:
+        st.warning("Não foi possível carregar o gráfico.")
 
 else:
 
@@ -124,7 +147,7 @@ else:
 # atualização automática
 # -------------------------
 
-st.caption("Atualiza automaticamente")
+st.caption("Atualiza automaticamente a cada 60 segundos")
 
 time.sleep(60)
 st.experimental_rerun()
