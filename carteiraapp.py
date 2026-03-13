@@ -142,7 +142,15 @@ if not carteira.empty:
 
     st.subheader("Carteira")
 
-    st.dataframe(carteira, use_container_width=True)
+# ajustar índice para começar em 1
+    tabela = carteira.copy()
+
+    tabela.index = range(1, len(tabela) + 1)
+
+# formatar para 01, 02, 03...
+    tabela.index = tabela.index.map(lambda x: f"{x:02}")
+
+    st.dataframe(tabela, use_container_width=True)
 
 # -----------------------------
 # remover ativo
