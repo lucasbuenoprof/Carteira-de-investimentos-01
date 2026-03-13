@@ -109,12 +109,16 @@ if not carteira.empty:
 # -------------------------
 # tabela carteira
 # -------------------------
-
+    
+    st.dataframe(
+    carteira,
+    use_container_width=True
+)
     st.subheader("Carteira")
 
-   st.subheader("Remover ativo")
+    st.subheader("Remover ativo")
 
-ativo_remover = st.selectbox(
+    ativo_remover = st.selectbox(
     "Escolha o ativo para remover",
     carteira["ticker"]
 )
