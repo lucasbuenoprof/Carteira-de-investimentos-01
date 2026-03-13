@@ -13,7 +13,8 @@ st.title("📈 Dashboard de Investimentos")
 
 def carregar_carteira():
     try:
-        return pd.read_csv("carteira.csv")
+        df = pd.read_csv("carteira.csv")
+        return df
     except:
         return pd.DataFrame(columns=["ticker","quantidade","preco_medio"])
 
@@ -60,14 +61,28 @@ if not carteira.empty:
 
     for t in tickers:
 
-        dados = yf.download(t, period="5d", progress=False)
+        try:
 
-        if not dados.empty:
-            precos[t] = dados["Close"].iloc[-1]
-        else:
-            precos[t] = None
+            dados = yf.download(t, period="5d", progress=False)
+
+            if not dados.empty:
+                precos[t] = float(dados["Close"].iloc[-1])
+            else:
+                precos[t] = 0
+
+        except:
+
+            precos[t] = 0
 
     carteira["preco_atual"] = carteira["ticker"].map(precos)
+
+# -------------------------
+# garantir números
+# -------------------------
+
+    carteira["quantidade"] = pd.to_numeric(carteira["quantidade"], errors="coerce").fillna(0)
+    carteira["preco_medio"] = pd.to_numeric(carteira["preco_medio"], errors="coerce").fillna(0)
+    carteira["preco_atual"] = pd.to_numeric(carteira["preco_atual"], errors="coerce").fillna(0)
 
 # -------------------------
 # cálculos
@@ -79,19 +94,29 @@ if not carteira.empty:
 
     carteira["lucro"] = carteira["valor_atual"] - carteira["valor_investido"]
 
-    carteira["rentabilidade_%"] = (
-        (carteira["lucro"] / carteira["valor_investido"]) * 100
-    ).round(1)
+# rentabilidade segura
 
-    carteira["rentabilidade_%"] = carteira["rentabilidade_%"].astype(str) + " %"
+    carteira["rentabilidade_%"] = 0
+
+    carteira.loc[carteira["valor_investido"] > 0, "rentabilidade_%"] = (
+        carteira["lucro"] / carteira["valor_investido"]
+    ) * 100
+
+    carteira["rentabilidade_%"] = carteira["rentabilidade_%"].round(1).astype(str) + " %"
+
+# peso na carteira
 
     total_investido = carteira["valor_investido"].sum()
 
-    carteira["% na carteira"] = (
-        (carteira["valor_investido"] / total_investido) * 100
-    ).round(1)
+    carteira["% na carteira"] = 0
 
-    carteira["% na carteira"] = carteira["% na carteira"].astype(str) + " %"
+    if total_investido > 0:
+
+        carteira["% na carteira"] = (
+            carteira["valor_investido"] / total_investido
+        ) * 100
+
+    carteira["% na carteira"] = carteira["% na carteira"].round(1).astype(str) + " %"
 
 # -------------------------
 # métricas
@@ -146,10 +171,16 @@ if not carteira.empty:
 
     ativo = st.selectbox("Escolha um ativo", tickers)
 
-    hist = yf.download(ativo, period="6mo", progress=False)
+    try:
 
-    if not hist.empty:
-        st.line_chart(hist["Close"])
+        hist = yf.download(ativo, period="6mo", progress=False)
+
+        if not hist.empty:
+            st.line_chart(hist["Close"])
+
+    except:
+
+        st.warning("Não foi possível carregar o gráfico.")
 
 else:
 
