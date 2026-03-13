@@ -112,10 +112,22 @@ if not carteira.empty:
 
     st.subheader("Carteira")
 
-    st.dataframe(
-        carteira,
-        use_container_width=True
-    )
+   st.subheader("Remover ativo")
+
+ativo_remover = st.selectbox(
+    "Escolha o ativo para remover",
+    carteira["ticker"]
+)
+
+if st.button("Remover ativo"):
+
+    carteira = carteira[carteira["ticker"] != ativo_remover]
+
+    carteira.to_csv("carteira.csv", index=False)
+
+    st.success("Ativo removido!")
+
+    st.experimental_rerun()
 
 # -------------------------
 # gráfico ativo
