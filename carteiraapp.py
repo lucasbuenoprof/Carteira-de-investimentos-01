@@ -3,17 +3,18 @@ import pandas as pd
 import yfinance as yf
 import time
 
-st.set_page_config(page_title="Minha Carteira", layout="wide")
+st.set_page_config(page_title="Carteira de Investimentos", layout="wide")
 
-st.title("📈 Dashboard de Investimentos")
+st.title("📊 Dashboard de Investimentos")
 
-# -------------------------
+# -----------------------------
 # carregar carteira
-# -------------------------
+# -----------------------------
 
 def carregar_carteira():
     try:
         df = pd.read_csv("carteira.csv")
+        df["ticker"] = df["ticker"].str.upper()
         return df
     except:
         return pd.DataFrame(columns=["ticker","quantidade","preco_medio"])
@@ -23,9 +24,9 @@ def salvar_carteira(df):
 
 carteira = carregar_carteira()
 
-# -------------------------
+# -----------------------------
 # adicionar ativo
-# -------------------------
+# -----------------------------
 
 st.sidebar.header("Adicionar ativo")
 
@@ -38,7 +39,7 @@ if st.sidebar.button("Adicionar"):
     if ticker != "":
 
         novo = pd.DataFrame({
-            "ticker":[ticker],
+            "ticker":[ticker.upper()],
             "quantidade":[quantidade],
             "preco_medio":[preco]
         })
@@ -49,9 +50,9 @@ if st.sidebar.button("Adicionar"):
 
         st.sidebar.success("Ativo adicionado!")
 
-# -------------------------
+# -----------------------------
 # buscar preços
-# -------------------------
+# -----------------------------
 
 if not carteira.empty:
 
@@ -63,30 +64,31 @@ if not carteira.empty:
 
         try:
 
-            dados = yf.download(t, period="5d", progress=False)
+            ativo = yf.Ticker(t)
 
-            if not dados.empty:
-                precos[t] = float(dados["Close"].iloc[-1])
+            hist = ativo.history(period="1d")
+
+            if not hist.empty:
+                precos[t] = float(hist["Close"].iloc[-1])
             else:
                 precos[t] = 0
 
         except:
-
             precos[t] = 0
 
     carteira["preco_atual"] = carteira["ticker"].map(precos)
 
-# -------------------------
+# -----------------------------
 # garantir números
-# -------------------------
+# -----------------------------
 
     carteira["quantidade"] = pd.to_numeric(carteira["quantidade"], errors="coerce").fillna(0)
     carteira["preco_medio"] = pd.to_numeric(carteira["preco_medio"], errors="coerce").fillna(0)
     carteira["preco_atual"] = pd.to_numeric(carteira["preco_atual"], errors="coerce").fillna(0)
 
-# -------------------------
+# -----------------------------
 # cálculos
-# -------------------------
+# -----------------------------
 
     carteira["valor_investido"] = carteira["quantidade"] * carteira["preco_medio"]
 
@@ -94,7 +96,7 @@ if not carteira.empty:
 
     carteira["lucro"] = carteira["valor_atual"] - carteira["valor_investido"]
 
-# rentabilidade segura
+# rentabilidade %
 
     carteira["rentabilidade_%"] = 0
 
@@ -104,7 +106,7 @@ if not carteira.empty:
 
     carteira["rentabilidade_%"] = carteira["rentabilidade_%"].round(1).astype(str) + " %"
 
-# peso na carteira
+# % na carteira
 
     total_investido = carteira["valor_investido"].sum()
 
@@ -118,9 +120,9 @@ if not carteira.empty:
 
     carteira["% na carteira"] = carteira["% na carteira"].round(1).astype(str) + " %"
 
-# -------------------------
+# -----------------------------
 # métricas
-# -------------------------
+# -----------------------------
 
     total_atual = carteira["valor_atual"].sum()
 
@@ -130,26 +132,26 @@ if not carteira.empty:
 
     col1.metric("💰 Valor investido", f"R$ {total_investido:,.2f}")
 
-    col2.metric("📊 Valor atual", f"R$ {total_atual:,.2f}")
+    col2.metric("📈 Valor atual", f"R$ {total_atual:,.2f}")
 
-    col3.metric("📈 Lucro / Prejuízo", f"R$ {lucro_total:,.2f}")
+    col3.metric("📊 Lucro / Prejuízo", f"R$ {lucro_total:,.2f}")
 
-# -------------------------
-# tabela carteira
-# -------------------------
+# -----------------------------
+# tabela
+# -----------------------------
 
     st.subheader("Carteira")
 
     st.dataframe(carteira, use_container_width=True)
 
-# -------------------------
+# -----------------------------
 # remover ativo
-# -------------------------
+# -----------------------------
 
     st.subheader("Remover ativo")
 
     ativo_remover = st.selectbox(
-        "Escolha o ativo para remover",
+        "Escolha o ativo",
         carteira["ticker"]
     )
 
@@ -163,34 +165,33 @@ if not carteira.empty:
 
         st.rerun()
 
-# -------------------------
+# -----------------------------
 # gráfico do ativo
-# -------------------------
+# -----------------------------
 
-    st.subheader("Gráfico do ativo")
+    st.subheader("Gráfico")
 
     ativo = st.selectbox("Escolha um ativo", tickers)
 
     try:
 
-        hist = yf.download(ativo, period="6mo", progress=False)
+        hist = yf.Ticker(ativo).history(period="6mo")
 
         if not hist.empty:
             st.line_chart(hist["Close"])
 
     except:
-
         st.warning("Não foi possível carregar o gráfico.")
 
 else:
 
     st.info("Adicione ativos na barra lateral.")
 
-# -------------------------
+# -----------------------------
 # atualização automática
-# -------------------------
+# -----------------------------
 
-st.caption("Atualiza automaticamente a cada 10 segundos")
+st.caption("Atualização automática a cada 10 segundos")
 
 time.sleep(10)
 
