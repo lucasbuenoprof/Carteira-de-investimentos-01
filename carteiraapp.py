@@ -3,10 +3,7 @@ import pandas as pd
 import yfinance as yf
 import time
 
-st.set_page_config(
-    page_title="Minha Carteira",
-    layout="wide"
-)
+st.set_page_config(page_title="Minha Carteira", layout="wide")
 
 st.title("📈 Dashboard de Investimentos")
 
@@ -46,6 +43,7 @@ if st.sidebar.button("Adicionar"):
         })
 
         carteira = pd.concat([carteira, novo], ignore_index=True)
+
         salvar_carteira(carteira)
 
         st.sidebar.success("Ativo adicionado!")
@@ -58,17 +56,22 @@ if not carteira.empty:
 
     tickers = carteira["ticker"].tolist()
 
-    dados = yf.download(
-        tickers,
-        period="5d",
-        progress=False
-    )
+    precos = {}
 
-    if dados.empty:
-        st.error("Não foi possível carregar os preços. Verifique os tickers.")
-        st.stop()
+    for t in tickers:
 
-    precos = dados["Close"].iloc[-1]
+        dados = yf.download(t, period="5d", progress=False)
+
+        if not dados.empty:
+            precos[t] = dados["Close"].iloc[-1]
+        else:
+            precos[t] = None
+
+    carteira["preco_atual"] = carteira["ticker"].map(precos)
+
+# -------------------------
+# cálculos
+# -------------------------
 
     carteira["valor_investido"] = carteira["quantidade"] * carteira["preco_medio"]
 
@@ -77,91 +80,76 @@ if not carteira.empty:
     carteira["lucro"] = carteira["valor_atual"] - carteira["valor_investido"]
 
     carteira["rentabilidade_%"] = (
-    (carteira["lucro"] / carteira["valor_investido"]) * 100
-).round(1)
+        (carteira["lucro"] / carteira["valor_investido"]) * 100
+    ).round(1)
 
     carteira["rentabilidade_%"] = carteira["rentabilidade_%"].astype(str) + " %"
 
     total_investido = carteira["valor_investido"].sum()
 
     carteira["% na carteira"] = (
-    (carteira["valor_investido"] / total_investido) * 100
-).round(1)
+        (carteira["valor_investido"] / total_investido) * 100
+    ).round(1)
+
     carteira["% na carteira"] = carteira["% na carteira"].astype(str) + " %"
 
 # -------------------------
-# métricas da carteira
+# métricas
 # -------------------------
 
-    total_investido = carteira["valor_investido"].sum()
     total_atual = carteira["valor_atual"].sum()
+
     lucro_total = total_atual - total_investido
 
     col1,col2,col3 = st.columns(3)
 
-    col1.metric(
-        "💰 Valor investido",
-        f"R$ {total_investido:,.2f}"
-    )
+    col1.metric("💰 Valor investido", f"R$ {total_investido:,.2f}")
 
-    col2.metric(
-        "📊 Valor atual",
-        f"R$ {total_atual:,.2f}"
-    )
+    col2.metric("📊 Valor atual", f"R$ {total_atual:,.2f}")
 
-    col3.metric(
-        "📈 Lucro / Prejuízo",
-        f"R$ {lucro_total:,.2f}"
-    )
+    col3.metric("📈 Lucro / Prejuízo", f"R$ {lucro_total:,.2f}")
 
 # -------------------------
 # tabela carteira
 # -------------------------
-    
-    st.dataframe(
-    carteira,
-    use_container_width=True
-)
+
     st.subheader("Carteira")
+
+    st.dataframe(carteira, use_container_width=True)
+
+# -------------------------
+# remover ativo
+# -------------------------
 
     st.subheader("Remover ativo")
 
     ativo_remover = st.selectbox(
-    "Escolha o ativo para remover",
-    carteira["ticker"]
-)
+        "Escolha o ativo para remover",
+        carteira["ticker"]
+    )
 
-if st.button("Remover ativo"):
+    if st.button("Remover ativo"):
 
-    carteira = carteira[carteira["ticker"] != ativo_remover]
+        carteira = carteira[carteira["ticker"] != ativo_remover]
 
-    carteira.to_csv("carteira.csv", index=False)
+        salvar_carteira(carteira)
 
-    st.success("Ativo removido!")
+        st.success("Ativo removido!")
 
-    st.experimental_rerun()
+        st.rerun()
 
 # -------------------------
-# gráfico ativo
+# gráfico do ativo
 # -------------------------
 
     st.subheader("Gráfico do ativo")
 
-    ativo = st.selectbox(
-        "Escolha um ativo",
-        tickers
-    )
+    ativo = st.selectbox("Escolha um ativo", tickers)
 
-    hist = yf.download(
-        ativo,
-        period="6mo",
-        progress=False
-    )
+    hist = yf.download(ativo, period="6mo", progress=False)
 
     if not hist.empty:
         st.line_chart(hist["Close"])
-    else:
-        st.warning("Não foi possível carregar o gráfico.")
 
 else:
 
@@ -171,7 +159,8 @@ else:
 # atualização automática
 # -------------------------
 
-st.caption("Atualiza automaticamente a cada 30 segundos")
+st.caption("Atualiza automaticamente a cada 10 segundos")
 
-time.sleep(30)
-st.experimental_rerun()
+time.sleep(10)
+
+st.rerun()
